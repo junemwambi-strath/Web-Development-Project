@@ -13,5 +13,3 @@ QuickFundi is a web application that connects clients with skilled blue-collar w
 -React Router
 
 
-
-# Web-Development-Project

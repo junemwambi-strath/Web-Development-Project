@@ -1,6 +1,8 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function WorkerProfile() {
+  const navigate = useNavigate();
   // Mock data for a local fundi
   const worker = {
     name: "John Juma",
@@ -177,7 +179,12 @@ export default function WorkerProfile() {
       </div>
 
       {/* Call to Action to pass flow to Member 4 */}
-      <button style={styles.bookButton}>Proceed to Booking</button>
+      <button 
+       style={styles.bookButton}
+       onClick={() => navigate('/booking')}
+       >
+        Proceed to Booking
+       </button>
     </div>
   );
 }

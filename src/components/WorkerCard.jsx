@@ -1,143 +1,181 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
 
 export default function WorkerCard({ worker }) {
+  const [hovered, setHovered] = useState(false);
+
   const styles = {
     card: {
-      border: '1px solid #eee',
-      borderRadius: '12px',
-      padding: '20px',
-      backgroundColor: '#fff',
-      boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '12px',
-      transition: 'box-shadow 0.2s ease',
+      border: "1px solid var(--border)",
+      borderRadius: "18px",
+      padding: "24px",
+      backgroundColor: "var(--surface)",
+      boxShadow: hovered
+        ? "0 18px 40px rgba(0,0,0,.12)"
+        : "var(--shadow)",
+      display: "flex",
+      flexDirection: "column",
+      gap: "18px",
+      transition: "all .3s ease",
+      transform: hovered ? "translateY(-6px)" : "translateY(0)",
     },
+
     header: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '14px',
+      display: "flex",
+      alignItems: "center",
+      gap: "16px",
     },
+
     avatar: {
-      width: '56px',
-      height: '56px',
-      borderRadius: '50%',
-      backgroundColor: '#eef2f3',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontSize: '22px',
+      width: "68px",
+      height: "68px",
+      borderRadius: "50%",
+      background: "#F4ECE5",
+      color: "var(--primary)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontSize: "30px",
       flexShrink: 0,
     },
+
     name: {
-      fontSize: '16px',
-      fontWeight: '600',
-      color: '#333',
       margin: 0,
+      fontSize: "20px",
+      fontWeight: "700",
+      color: "var(--heading)",
     },
+
     title: {
-      fontSize: '13px',
-      color: '#666',
-      margin: '2px 0 0 0',
+      margin: "4px 0 0",
+      color: "var(--text)",
+      fontSize: "15px",
     },
-    location: {
-      fontSize: '13px',
-      color: '#888',
+
+    infoRow: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      color: "var(--text)",
+      fontSize: "14px",
     },
+
     rating: {
-      fontSize: '13px',
-      color: '#e67e22',
+      color: "#D9902D",
+      fontWeight: "600",
     },
+
     skillsRow: {
-      display: 'flex',
-      gap: '6px',
-      flexWrap: 'wrap',
+      display: "flex",
+      flexWrap: "wrap",
+      gap: "10px",
     },
+
     skill: {
-      backgroundColor: '#eef2f3',
-      padding: '4px 10px',
-      borderRadius: '20px',
-      fontSize: '12px',
-      fontWeight: '500',
-      color: '#444',
+      background: "#F4ECE5",
+      color: "var(--primary)",
+      padding: "7px 14px",
+      borderRadius: "30px",
+      fontSize: "13px",
+      fontWeight: "600",
     },
+
     footer: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      marginTop: '4px',
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginTop: "6px",
     },
+
     availableBadge: {
-      fontSize: '12px',
-      fontWeight: '500',
-      padding: '3px 10px',
-      borderRadius: '20px',
-      backgroundColor: '#E1F5EE',
-      color: '#0F6E56',
+      background: "#EAF6EF",
+      color: "#2F855A",
+      padding: "8px 14px",
+      borderRadius: "30px",
+      fontSize: "13px",
+      fontWeight: "600",
     },
+
     unavailableBadge: {
-      fontSize: '12px',
-      fontWeight: '500',
-      padding: '3px 10px',
-      borderRadius: '20px',
-      backgroundColor: '#f0f0f0',
-      color: '#999',
+      background: "#F3F3F3",
+      color: "#888",
+      padding: "8px 14px",
+      borderRadius: "30px",
+      fontSize: "13px",
+      fontWeight: "600",
     },
-    viewButton: {
-      backgroundColor: '#0F6E56',
-      color: 'white',
-      border: 'none',
-      padding: '8px 18px',
-      borderRadius: '6px',
-      fontSize: '13px',
-      fontWeight: '600',
-      cursor: 'pointer',
-      textDecoration: 'none',
-      display: 'inline-block',
+
+    button: {
+      background: "var(--primary)",
+      color: "#fff",
+      padding: "10px 20px",
+      borderRadius: "10px",
+      textDecoration: "none",
+      fontWeight: "600",
+      transition: ".3s",
     },
   };
 
-  // Show only first 3 skills on the card to keep it compact
   const visibleSkills = worker.skills.slice(0, 3);
   const extraSkills = worker.skills.length - 3;
 
   return (
-    <div style={styles.card}>
-      {/* Header: avatar + name + title */}
+    <div
+      style={styles.card}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       <div style={styles.header}>
         <div style={styles.avatar}>🛠️</div>
+
         <div>
-          <p style={styles.name}>{worker.name}</p>
+          <h3 style={styles.name}>{worker.name}</h3>
           <p style={styles.title}>{worker.title}</p>
         </div>
       </div>
 
-      {/* Location & Rating */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-        <span style={styles.location}>📍 {worker.location}</span>
-        <span style={styles.rating}>⭐ {worker.rating} ({worker.reviewsCount})</span>
+      <div style={styles.infoRow}>
+        <span>📍 {worker.location}</span>
+
+        <span style={styles.rating}>
+          ⭐ {worker.rating} ({worker.reviewsCount})
+        </span>
       </div>
 
-      {/* Skills */}
       <div style={styles.skillsRow}>
-        {visibleSkills.map((skill, i) => (
-          <span key={i} style={styles.skill}>{skill}</span>
+        {visibleSkills.map((skill, index) => (
+          <span key={index} style={styles.skill}>
+            {skill}
+          </span>
         ))}
+
         {extraSkills > 0 && (
-          <span style={{ ...styles.skill, backgroundColor: '#fff', border: '1px solid #ddd', color: '#888' }}>
-            +{extraSkills} more
+          <span
+            style={{
+              ...styles.skill,
+              background: "#fff",
+              border: "1px solid var(--border)",
+              color: "var(--text)",
+            }}
+          >
+            +{extraSkills}
           </span>
         )}
       </div>
 
-      {/* Footer: availability + CTA */}
       <div style={styles.footer}>
-        <span style={worker.available ? styles.availableBadge : styles.unavailableBadge}>
-          {worker.available ? '● Available' : '● Unavailable'}
+        <span
+          style={
+            worker.available
+              ? styles.availableBadge
+              : styles.unavailableBadge
+          }
+        >
+          {worker.available ? "● Available" : "● Unavailable"}
         </span>
-        <Link to={`/worker/${worker.id}`} style={styles.viewButton}>
-          View Profile
+
+        <Link to={`/worker/${worker.id}`} style={styles.button}>
+          View Profile →
         </Link>
       </div>
     </div>

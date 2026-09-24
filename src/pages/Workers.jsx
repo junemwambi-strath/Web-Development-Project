@@ -1,21 +1,16 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import WorkerCard from '../components/WorkerCard';
 import workers from '../mockdata/workers';
-import { useEffect} from 'react';
 
 const SKILLS = ['All', 'Plumber', 'Electrician', 'Carpenter', 'Painter', 'Welder', 'Tiling', 'AC & Appliances', 'Cleaning'];
 
 export default function WorkersPage() {
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
-  const [allWorkers, setAllWorkers] = useState([]);
-
-  useEffect(() => {
-    const savedWorkers =
-      JSON.parse(localStorage.getItem('quickfundi-workers')) || [];
-
-    setAllWorkers([...workers, ...savedWorkers]);
-  }, []);
+ const [allWorkers, setAllWorkers] = useState(() => {
+  const savedWorkers = JSON.parse(localStorage.getItem('quickfundi-workers')) || [];
+  return [...workers, ...savedWorkers];
+});
 
   // Filter logic
   const filtered = allWorkers.filter((worker) => {

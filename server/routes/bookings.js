@@ -1,0 +1,110 @@
+const express = require('express');
+const router = express.Router();
+const db = require('../db');
+
+// POST /bookings
+router.post('/', async (req, res) => {
+  const { workerId, jobType, location, scheduledFor, requestedBy } = req.body;
+  if (!workerId || !jobType || !location || !scheduledFor || !requestedBy) {
+    return res.status(400).json({
+      code: 'INVALID_BOOKING',
+      message: 'workerId, jobType, location, scheduledFor, and requestedBy are all required',
+    });
+  }
+  try {
+    const id = `bk_${Date.now()}`;
+    await db.query(
+      'INSERT INTO bookings (id, worker_id, job_type, location, scheduled_for, requested_by) VALUES (?, ?, ?, ?, ?, ?)',
+      [id, workerId, jobType, location, scheduledFor, requestedBy]
+    );
+    const [rows] = await db.query(
+      'SELECT id, worker_id AS workerId, job_type AS jobType, location, scheduled_for AS scheduledFor, status, created_at AS createdAt FROM bookings WHERE id = ?',
+      [id]
+    );
+    res.status(201).json(rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ code: 'SERVER_ERROR', message: 'Failed to create booking' });
+  }
+});
+
+// GET /bookings/{id}
+router.get('/:id', async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      'SELECT id, worker_id AS workerId, job_type AS jobType, location, scheduled_for AS scheduledFor, status, created_at AS createdAt FROM bookings WHERE id = ?',
+      [req.params.id]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({
+        code: 'BOOKING_NOT_FOUND',
+        message: `No booking found with id ${req.params.id}`,
+      });
+    }
+    res.json(rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ code: 'SERVER_ERROR', message: 'Failed to fetch booking' });
+  }
+});
+
+// PATCH /bookings/{id} — reschedule
+router.patch('/:id', async (req, res) => {
+  const { scheduledFor } = req.body;
+  if (!scheduledFor) {
+    return res.status(400).json({
+      code: 'INVALID_RESCHEDULE',
+      message: 'scheduledFor is required',
+    });
+  }
+  try {
+    const [existing] = await db.query('SELECT status FROM bookings WHERE id = ?', [req.params.id]);
+    if (existing.length === 0) {
+      return res.status(404).json({
+        code: 'BOOKING_NOT_FOUND',
+        message: `No booking found with id ${req.params.id}`,
+      });
+    }
+    if (existing[0].status === 'completed') {
+      return res.status(409).json({
+        code: 'BOOKING_NOT_RESCHEDULABLE',
+        message: `Booking ${req.params.id} is already completed and cannot be rescheduled`,
+      });
+    }
+    await db.query('UPDATE bookings SET scheduled_for = ? WHERE id = ?', [scheduledFor, req.params.id]);
+    const [rows] = await db.query(
+      'SELECT id, worker_id AS workerId, job_type AS jobType, location, scheduled_for AS scheduledFor, status, created_at AS createdAt FROM bookings WHERE id = ?',
+      [req.params.id]
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ code: 'SERVER_ERROR', message: 'Failed to reschedule booking' });
+  }
+});
+
+// DELETE /bookings/{id}
+router.delete('/:id', async (req, res) => {
+  try {
+    const [existing] = await db.query('SELECT status FROM bookings WHERE id = ?', [req.params.id]);
+    if (existing.length === 0) {
+      return res.status(404).json({
+        code: 'BOOKING_NOT_FOUND',
+        message: `No booking found with id ${req.params.id}`,
+      });
+    }
+    if (existing[0].status === 'completed') {
+      return res.status(409).json({
+        code: 'BOOKING_NOT_CANCELLABLE',
+        message: `Booking ${req.params.id} is already completed and cannot be cancelled`,
+      });
+    }
+    await db.query('UPDATE bookings SET status = ? WHERE id = ?', ['cancelled', req.params.id]);
+    res.status(204).send();
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ code: 'SERVER_ERROR', message: 'Failed to cancel booking' });
+  }
+});
+
+module.exports = router;

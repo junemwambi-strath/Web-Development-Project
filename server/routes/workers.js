@@ -2,28 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
-// GET /workers?jobType=electrician&location=...
-router.get('/', async (req, res) => {
-  const { jobType, location } = req.query;
-  if (!jobType || !location) {
-    return res.status(400).json({
-      code: 'INVALID_PARAMS',
-      message: 'jobType and location are required query parameters',
-    });
-  }
-  try {
-    const [rows] = await db.query(
-      'SELECT id, name, job_type AS jobType, location, rating, rate_per_hour AS ratePerHour FROM workers WHERE job_type = ? AND location LIKE ?',
-      [jobType, `%${location}%`]
-    );
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ code: 'SERVER_ERROR', message: 'Failed to fetch workers' });
-  }
-});
-
-// GET /workers  (jobType and location are now optional filters)
+// GET /workers  (jobType and location are optional filters)
 router.get('/', async (req, res) => {
   const { jobType, location } = req.query;
 
@@ -41,10 +20,46 @@ router.get('/', async (req, res) => {
 
   try {
     const [rows] = await db.query(query, params);
-    res.json(rows);
+    const mapped = rows.map((r) => ({
+      ...r,
+      rating: Number(r.rating),
+      ratePerHour: Number(r.ratePerHour),
+    }));
+    res.json(mapped);
   } catch (err) {
     console.error(err);
     res.status(500).json({ code: 'SERVER_ERROR', message: 'Failed to fetch workers' });
+  }
+});
+
+// GET /workers/{id}
+router.get('/:id', async (req, res) => {
+  try {
+    const [workerRows] = await db.query(
+      'SELECT id, name, job_type AS jobType, location, rating, rate_per_hour AS ratePerHour, experience_years AS experienceYears FROM workers WHERE id = ?',
+      [req.params.id]
+    );
+    if (workerRows.length === 0) {
+      return res.status(404).json({
+        code: 'WORKER_NOT_FOUND',
+        message: `No worker found with id ${req.params.id}`,
+      });
+    }
+
+    const [reviewRows] = await db.query(
+      'SELECT author, comment, rating FROM reviews WHERE worker_id = ?',
+      [req.params.id]
+    );
+
+    const worker = workerRows[0];
+    worker.rating = Number(worker.rating);
+    worker.ratePerHour = Number(worker.ratePerHour);
+    worker.reviews = reviewRows;
+
+    res.json(worker);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ code: 'SERVER_ERROR', message: 'Failed to fetch worker' });
   }
 });
 
